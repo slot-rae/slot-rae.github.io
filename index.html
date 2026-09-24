@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Slot-RAE</title>
+  <meta name="description" content="Slot-RAE: object-centric diffusion trained from scratch directly in the feature space of DINOv3, enabling unsupervised object discovery, high-fidelity reconstruction and zero-shot composition.">
+  <meta property="og:title" content="Slot-RAE: Streamlining Object-Centric Learning via Direct Representation Auto-Encoders">
+  <meta property="og:description" content="Object-centric diffusion trained from scratch in the feature space of a frozen vision foundation model.">
+  <meta property="og:image" content="static/images/preview.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='2' width='28' height='28' rx='7' fill='%23b4461f'/><rect x='8' y='9' width='16' height='4' rx='1.5' fill='white'/><rect x='8' y='15' width='16' height='4' rx='1.5' fill='white' opacity='.8'/><rect x='8' y='21' width='16' height='4' rx='1.5' fill='white' opacity='.6'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&family=Source+Serif+4:opsz,wght@8..60,400;8..60,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/style.css">
+  <script>
+    try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top">Slot-RAE</a>
+    <nav class="nav">
+      <a href="#abstract">Abstract</a>
+      <a href="#method">Method</a>
+      <a href="#discovery">Object discovery</a>
+      <a href="#reconstruction">Reconstruction</a>
+      <a href="#composition">Composition</a>
+      <a href="#efficiency">Efficiency</a>
+      <a href="#ablations">Ablations</a>
+      <a href="#bibtex">BibTeX</a>
+    </nav>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">◐</button>
+  </div>
+</header>
+
+<main id="top">
+  <!-- ================= HERO ================= -->
+  <div class="hero wrap">
+    <span class="venue">Under review</span>
+    <h1>Slot-RAE</h1>
+    <p class="subtitle">Streamlining Object-Centric Learning via Direct Representation Auto-Encoders</p>
+    <p class="authors">Anonymous Authors</p>
+    <p class="affil">Paper under double-blind review</p>
+    <div class="buttons">
+      <span class="btn disabled" title="Available after the review period">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        Paper <span class="soon">· soon</span>
+      </span>
+      <a class="btn" href="https://github.com/alexcbb/slot-rae" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.2.8.8 1.2 1.9 1.2 3.1 0 4.6-2.8 5.6-5.5 5.9.5.4.9 1.1.9 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z"/></svg>
+        Code
+      </a>
+      <a class="btn" href="https://huggingface.co/collections/Beegbrain/slot-rae-models" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/></svg>
+        Checkpoints
+      </a>
+    </div>
+
+    <div class="teaser">
+      <figure class="op" style="margin:0">
+        <div class="op-title">Add</div>
+        <img src="static/images/add/add_2.webp" alt="A person slot from one image inserted into a window scene" loading="eager">
+        <figcaption class="op-caption">Insert an object slot from another image into a new scene.</figcaption>
+      </figure>
+      <figure class="op" style="margin:0">
+        <div class="op-title">Subtract</div>
+        <img src="static/images/subtract/teaser_remove.webp" alt="Kitchen cabinets removed from a scene" loading="eager">
+        <figcaption class="op-caption">Remove a slot; the occluded background is filled in.</figcaption>
+      </figure>
+      <figure class="op" style="margin:0">
+        <div class="op-title">Compose</div>
+        <img src="static/images/compose/compose_01.webp" alt="A dog slot composed into a street scene" loading="eager">
+        <figcaption class="op-caption">Mix slots from unrelated images into one coherent scene.</figcaption>
+      </figure>
+    </div>
+    <p class="muted small" style="margin-top:14px">Zero-shot edits performed directly in the DINOv3 feature space. Red overlays show the selected slot masks.</p>
+  </div>
+
+  <!-- ================= TL;DR ================= -->
+  <section class="wrap narrow" id="tldr" style="border-top:1px solid var(--border)">
+    <p class="lead"><b>TL;DR</b> — Slot-RAE learns object slots on top of a frozen DINOv3 encoder and trains a slot-conditioned Diffusion Transformer <b>from scratch</b> to regenerate DINOv3 features. There is no VAE, no Stable Diffusion prior and no classifier-free guidance. A frozen RAE decoder maps the generated features back to pixels.</p>
+    <div class="highlights">
+      <div class="stat"><div class="v">10.11</div><div class="l">reconstruction FID on COCO (CODA: 13.96)</div></div>
+      <div class="stat"><div class="v">0.64</div><div class="l">CLIP-I for zero-shot slot swapping (GLASS: 0.62)</div></div>
+      <div class="stat"><div class="v">1.35 s</div><div class="l">per image on a laptop GPU, ≈7× faster than baselines</div></div>
+      <div class="stat"><div class="v">2 days</div><div class="l">of training on one GPU, no generative pre-training</div></div>
+    </div>
+  </section>
+
+  <!-- ================= ABSTRACT ================= -->
+  <section class="wrap narrow" id="abstract">
+    <h2>Abstract</h2>
+    <p>Deploying object-centric models for real-world scene understanding typically requires complex pipelines to achieve both robust scene decomposition and high-fidelity generation. While recent diffusion-based approaches have improved visual quality, they rely heavily on pre-trained generative priors (e.g., Stable Diffusion) and external VAE latent spaces, bypassing the opportunity for direct semantic composition.</p>
+    <p>In this paper, we propose <b>Slot-RAE</b>, a framework that demonstrates true compositionality can be achieved by operating directly within the continuous semantic feature space of visual foundation models (e.g., DINOv3). Slot-RAE leverages a feature-space diffusion process via a Diffusion Transformer (DiT) and a Representation Alignment (REPA) head to compose the VFM latent space directly. Because the generative core is trained from scratch entirely within the frozen VFM space, it eliminates VAE bottlenecks and the need for task-agnostic generative pre-training.</p>
+    <p>Experiments on the COCO dataset confirm that this direct latent composition strategy yields state-of-the-art compositional capabilities. Slot-RAE provides robust zero-shot compositionality, high-fidelity image reconstruction, and effective unsupervised object discovery, functioning much faster and more efficiently than standard object-centric latent diffusion models.</p>
+  </section>
+
+  <!-- ================= METHOD ================= -->
+  <section class="wrap" id="method">
+    <div class="narrow" style="margin:0 auto">
+      <h2>Method</h2>
+      <p>Slot Attention compresses the dense features <i>F</i> of a frozen DINO encoder into <i>K</i> object slots. A Diffusion Transformer then learns to denoise the <i>same</i> feature map, conditioned on the slots. Feature space is the only latent space: the target of the object-discovery bottleneck and the space of generation are identical.</p>
+    </div>
+    <figure class="figure card white">
+      <img src="static/images/method/slot_rae_fig.png" alt="Slot-RAE training and inference pipeline: frozen DINO encoder, slot attention, slot-conditioned DiT with REPA head, frozen RAE decoder">
+      <figcaption><b>Overview.</b> <i>Training:</i> a frozen DINO encoder extracts dense features <b>F</b><sub>0</sub> that Slot Attention compresses into object slots <b>S</b>. The DiT denoises the noisy features <b>F</b><sub>t</sub> conditioned on the slots, supervised by the diffusion loss. A REPA head on early-layer hidden states is aligned with the clean features. <i>Inference:</i> starting from noise, the DiT iteratively generates features from the slots (or from a mixed slot set <b>S</b><sub>mixed</sub>) in 20 steps without classifier-free guidance. The frozen RAE decoder then maps them to pixels.</figcaption>
+    </figure>
+    <div class="ideas">
+      <div class="idea"><div class="n">01</div><h4>Diffusion in VFM feature space</h4><p>Noisy DINOv3 features <i>F<sub>t</sub></i> are denoised by a DiT with a wide DDT head. The timestep modulates the network, and the object slots condition every denoising step.</p></div>
+      <div class="idea"><div class="n">02</div><h4>Representation alignment</h4><p>A lightweight REPA projection on an early DiT layer is aligned with the clean features. It stabilizes feature-space diffusion and yields more coherent object slots (+0.6 mBO<sub>i</sub>).</p></div>
+      <div class="idea"><div class="n">03</div><h4>Trained from scratch</h4><p>The only pre-trained parts are the frozen encoder, which defines the space, and the frozen RAE decoder, which is used for viewing only. Slots and DiT are trained end-to-end without any text-to-image prior.</p></div>
+    </div>
+    <div class="narrow" style="margin:26px auto 0">
+      <div class="eq"><i>F<sub>t</sub></i> = √ᾱ<sub>t</sub> <i>F</i><sub>0</sub> + √(1−ᾱ<sub>t</sub>) ε &nbsp;&nbsp;·&nbsp;&nbsp; ℒ = 𝔼 ‖ε − ε<sub>θ</sub>([<i>S</i>; <i>F<sub>t</sub></i>], t)‖² + λ ℒ<sub>REPA</sub></div>
+      <p class="muted small">Because the generated feature map lives on the same manifold as real DINOv3 features, slots extracted from different images can be removed, swapped or concatenated, and the result is decoded without any fine-tuning.</p>
+    </div>
+  </section>
+
+  <!-- ================= OBJECT DISCOVERY ================= -->
+  <section class="wrap" id="discovery">
+    <div class="narrow" style="margin:0 auto">
+      <h2>Unsupervised object discovery</h2>
+      <p>Adding a generative diffusion decoder does not destroy scene decomposition. Among strictly unsupervised methods, Slot-RAE with DINOv3 reaches the best instance-level mIoU on PASCAL VOC. Unlike deterministic MLP and Transformer decoders, it also benefits from the stronger DINOv3 backbone.</p>
+    </div>
+    <div class="grid-4 figure">
+      <img src="static/images/discovery/overlay_1.webp" alt="Slot segmentation of a plate of food" loading="lazy">
+      <img src="static/images/discovery/overlay_2.webp" alt="Slot segmentation of a person holding a mug" loading="lazy">
+      <img src="static/images/discovery/overlay_3.webp" alt="Slot segmentation example" loading="lazy">
+      <img src="static/images/discovery/overlay_4.webp" alt="Slot segmentation example" loading="lazy">
+    </div>
+    <p class="muted small" style="margin-top:-12px">Slot-attention masks on COCO validation images; each color is one slot.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th rowspan="2">Model</th><th rowspan="2">Comp.</th><th rowspan="2">Backbone / Decoder</th><th colspan="3">PASCAL VOC 2012</th><th colspan="3">COCO</th></tr>
+          <tr><th>mBO<sub>i</sub></th><th>mBO<sub>c</sub></th><th>mIoU<sub>i</sub></th><th>mBO<sub>i</sub></th><th>mBO<sub>c</sub></th><th>mIoU<sub>i</sub></th></tr>
+        </thead>
+        <tbody>
+          <tr class="group"><td colspan="9">Unsupervised object discovery</td></tr>
+          <tr><td>Slot-Attention (MLP)</td><td>✗</td><td>CNN / MLP</td><td>24.6</td><td>24.9</td><td>–</td><td>17.2</td><td>19.2</td><td>–</td></tr>
+          <tr><td>DINOSAUR (MLP)</td><td>✗</td><td>DINOv2-B / MLP</td><td>39.7</td><td>41.2</td><td>39.1</td><td>28.1</td><td>32.1</td><td>26.8</td></tr>
+          <tr><td></td><td>✗</td><td>DINOv3-B / MLP</td><td>38.1</td><td>42.5</td><td>36.9</td><td>25.4</td><td>31.5</td><td>24.0</td></tr>
+          <tr><td>DINOSAUR (Transf.)</td><td>✗</td><td>DINOv2-B / Transf.</td><td>43.2</td><td>47.8</td><td>42.0</td><td><b>33.3</b></td><td><b>41.2</b></td><td><b>31.6</b></td></tr>
+          <tr><td></td><td>✗</td><td>DINOv3-B / Transf.</td><td>45.2</td><td>51.9</td><td>43.8</td><td>29.3</td><td>38.0</td><td>27.6</td></tr>
+          <tr><td>SlotDiffusion</td><td>✓</td><td>DINO / U-Net</td><td><b>50.4</b></td><td><b>55.3</b></td><td>–</td><td>31.0</td><td>35.0</td><td>–</td></tr>
+          <tr class="ours"><td>Slot-RAE (ours)</td><td>✓</td><td>DINOv2-B / DiT</td><td>45.0</td><td>48.6</td><td><u>44.1</u></td><td>29.1</td><td>34.4</td><td>27.4</td></tr>
+          <tr class="ours"><td>Slot-RAE (ours)</td><td>✓</td><td>DINOv3-B / DiT</td><td><u>50.1</u></td><td><u>52.8</u></td><td><b>49.0</b></td><td><u>32.3</u></td><td><u>38.1</u></td><td><u>30.8</u></td></tr>
+          <tr class="group"><td colspan="9">Weakly-supervised (pre-trained Stable Diffusion prior)</td></tr>
+          <tr><td>Stable-LSD</td><td>✓</td><td>DINOv2-B / U-Net</td><td>32.1</td><td>35.4</td><td>31.5</td><td>25.9</td><td>30.0</td><td>24.7</td></tr>
+          <tr><td>CODA</td><td>✓</td><td>DINOv2-B / U-Net</td><td><u>55.4</u></td><td><u>61.3</u></td><td><u>50.7</u></td><td><u>36.6</u></td><td><u>41.4</u></td><td><u>36.4</u></td></tr>
+          <tr><td>GLASS</td><td>✓</td><td>DINOv2-B / U-Net</td><td><b>58.9</b></td><td><b>62.2</b></td><td><b>58.1</b></td><td><b>40.6</b></td><td><b>48.5</b></td><td><b>38.9</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">Mean over 3 seeds. <b style="color:var(--accent)">Bold</b>: best, <u>underline</u>: second best within each supervision category. “Comp.”: supports compositional generation.</p>
+
+    <details>
+      <summary>More object discovery results</summary>
+      <p class="muted small" style="margin:10px 0">Input · slot attention masks · overlay (COCO validation).</p>
+      <div class="grid-2">
+        <img src="static/images/discovery/triplet_01.webp" alt="Object discovery example" loading="lazy">
+        <img src="static/images/discovery/triplet_02.webp" alt="Object discovery example" loading="lazy">
+        <img src="static/images/discovery/triplet_03.webp" alt="Object discovery example" loading="lazy">
+        <img src="static/images/discovery/triplet_04.webp" alt="Object discovery example" loading="lazy">
+        <img src="static/images/discovery/triplet_05.webp" alt="Object discovery example" loading="lazy">
+        <img src="static/images/discovery/triplet_06.webp" alt="Object discovery example" loading="lazy">
+        <img src="static/images/discovery/triplet_07.webp" alt="Object discovery example" loading="lazy">
+        <img src="static/images/discovery/triplet_08.webp" alt="Object discovery example" loading="lazy">
+        <img src="static/images/discovery/triplet_09.webp" alt="Object discovery example" loading="lazy">
+        <img src="static/images/discovery/triplet_10.webp" alt="Object discovery example" loading="lazy">
+      </div>
+    </details>
+  </section>
+
+  <!-- ================= RECONSTRUCTION ================= -->
+  <section class="wrap" id="reconstruction">
+    <div class="narrow" style="margin:0 auto">
+      <h2>Image reconstruction</h2>
+      <p>Images are regenerated from their slots alone. Stable-LSD oversmooths textures and distorts layouts. GLASS hallucinates plausible but wrong details, such as the cake's content or the surfer's pose and color. Slot-RAE keeps sharp boundaries and textures without relying on a hallucinating prior, and comes close to the non-compositional RAE upper bound.</p>
+    </div>
+    <div class="grid-2" style="align-items:start; margin-top:26px">
+      <figure class="figure card" style="margin:0">
+        <div class="compare-head"><span>Original</span><span>Stable-LSD</span><span>GLASS</span><span>Slot-RAE</span></div>
+        <img src="static/images/recon/recon_main.webp" alt="Reconstruction comparison: original, Stable-LSD, GLASS, Slot-RAE" loading="lazy">
+      </figure>
+      <div>
+        <div class="table-wrap" style="margin-top:0">
+          <table>
+            <thead>
+              <tr><th rowspan="2">Model</th><th colspan="5">Reconstruction</th></tr>
+              <tr><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th><th>FID↓</th><th>KID×10³↓</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Stable-LSD</td><td>10.92</td><td>0.20</td><td>0.72</td><td>125.76</td><td>–</td></tr>
+              <tr><td>GLASS</td><td><u>11.14</u></td><td>0.25</td><td><u>0.57</u></td><td>21.48</td><td>6.78</td></tr>
+              <tr><td>CODA</td><td>10.69</td><td><u>0.29</u></td><td>0.59</td><td><u>13.96</u></td><td><u>2.05</u></td></tr>
+              <tr class="ours"><td>Slot-RAE (ours)</td><td><b>13.93</b></td><td><b>0.33</b></td><td><b>0.46</b></td><td><b>10.11</b></td><td><b>0.54</b></td></tr>
+              <tr class="group"><td colspan="6">Upper bound (no slots, no composition)</td></tr>
+              <tr><td>Original RAE</td><td>14.11</td><td>0.46</td><td>0.25</td><td>8.06</td><td>0.32</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-note">COCO, mean over 3 seeds.</p>
+        <details>
+          <summary>More reconstructions</summary>
+          <div class="compare-head" style="margin-top:12px"><span>Original</span><span>Stable-LSD</span><span>GLASS</span><span>Slot-RAE</span></div>
+          <img src="static/images/recon/recon_extended.webp" alt="Additional reconstruction comparisons" loading="lazy" style="border-radius:8px">
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= COMPOSITION ================= -->
+  <section class="wrap" id="composition">
+    <div class="narrow" style="margin:0 auto">
+      <h2>Zero-shot composition</h2>
+      <p>Following CODA, slots are added, removed and swapped between unrelated COCO images, then decoded without any fine-tuning. Lighting, shadows and occlusions are resolved by the DiT. Slot-RAE sets the best distribution realism and identity preservation for composed scenes.</p>
+    </div>
+
+    <div class="table-wrap narrow" style="margin-left:auto;margin-right:auto">
+      <table>
+        <thead><tr><th>Model (slot swapping, COCO)</th><th>FID↓</th><th>KID×10³↓</th><th>CLIP-I↑</th></tr></thead>
+        <tbody>
+          <tr><td>GLASS</td><td>55.99</td><td><u>51.03</u></td><td><u>0.62</u></td></tr>
+          <tr><td>CODA</td><td><u>53.60</u></td><td>53.08</td><td>0.58</td></tr>
+          <tr class="ours"><td>Slot-RAE (ours)</td><td><b>50.04</b></td><td><b>50.75</b></td><td><b>0.64</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Composition examples">
+      <button class="tab" role="tab" aria-selected="true" aria-controls="tab-add" id="t-add">Add</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="tab-sub" id="t-sub">Subtract</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="tab-comp" id="t-comp">Compose</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="tab-swap" id="t-swap">Swap</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="tab-fail" id="t-fail">Failure cases</button>
+    </div>
+
+    <div class="tabpanel" role="tabpanel" id="tab-add" aria-labelledby="t-add">
+      <p class="tab-intro">An object slot from a source image (red) is injected into a target scene without disrupting its geometry.</p>
+      <div class="grid-2">
+        <div class="strip"><img src="static/images/add/add_1.webp" alt="Add example" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(3,1fr)"><span>Source slot</span><span>Target</span><span>Result</span></div></div>
+        <div class="strip"><img src="static/images/add/add_2.webp" alt="Add example" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(3,1fr)"><span>Source slot</span><span>Target</span><span>Result</span></div></div>
+      </div>
+      <div class="strip"><img src="static/images/add/add_3.webp" alt="Add example" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Image A</span><span>Image B</span><span>Slot from A</span><span>Result</span></div></div>
+      <div class="strip"><img src="static/images/add/add_4.webp" alt="Add example" loading="lazy"></div>
+    </div>
+
+    <div class="tabpanel" role="tabpanel" id="tab-sub" aria-labelledby="t-sub" hidden>
+      <p class="tab-intro">One slot (red) is zeroed out and the scene is regenerated from the same noise. The object disappears and the occluded region is inpainted, while the rest of the scene is preserved.</p>
+      <div class="grid-2">
+        <div class="strip"><img src="static/images/subtract/remove_01.webp" alt="Slot removal example" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>Slot removed</span></div></div>
+        <div class="strip"><img src="static/images/subtract/remove_02.webp" alt="Slot removal example" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>Slot removed</span></div></div>
+        <div class="strip"><img src="static/images/subtract/remove_03.webp" alt="Slot removal example" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>Slot removed</span></div></div>
+        <div class="strip"><img src="static/images/subtract/remove_04.webp" alt="Slot removal example" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>Slot removed</span></div></div>
+        <div class="strip"><img src="static/images/subtract/remove_05.webp" alt="Slot removal example" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>Slot removed</span></div></div>
+        <div class="strip"><img src="static/images/subtract/remove_06.webp" alt="Slot removal example" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>Slot removed</span></div></div>
+      </div>
+    </div>
+
+    <div class="tabpanel" role="tabpanel" id="tab-comp" aria-labelledby="t-comp" hidden>
+      <p class="tab-intro">Slots from unrelated samples are blended into a single, coherent new scene.</p>
+      <div class="grid-2">
+        <div class="strip"><img src="static/images/compose/compose_01.webp" alt="Compose example" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(3,1fr)"><span>Slot from A</span><span>Slot from B</span><span>Composed</span></div></div>
+        <div class="strip"><img src="static/images/compose/compose_02.webp" alt="Compose example" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(3,1fr)"><span>Slot from A</span><span>Slot from B</span><span>Composed</span></div></div>
+        <div class="strip"><img src="static/images/compose/compose_03.webp" alt="Compose example" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(3,1fr)"><span>Slot from A</span><span>Slot from B</span><span>Composed</span></div></div>
+        <div class="strip"><img src="static/images/compose/compose_04.webp" alt="Compose example" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(3,1fr)"><span>Slot from A</span><span>Slot from B</span><span>Composed</span></div></div>
+        <div class="strip"><img src="static/images/compose/compose_07.webp" alt="Compose example" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(3,1fr)"><span>Slot from A</span><span>Slot from B</span><span>Composed</span></div></div>
+      </div>
+      <div class="strip"><img src="static/images/compose/compose_05.webp" alt="Compose example" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(5,1fr)"><span>Image A</span><span>Image B</span><span>Slot from A</span><span>Replaced slot in B</span><span>Composed</span></div></div>
+      <div class="strip"><img src="static/images/compose/compose_06.webp" alt="Compose example" loading="lazy"></div>
+      <div class="strip"><img src="static/images/compose/compose_08.webp" alt="Compose example" loading="lazy"></div>
+      <div class="strip"><img src="static/images/compose/compose_09.webp" alt="Compose example" loading="lazy"></div>
+    </div>
+
+    <div class="tabpanel" role="tabpanel" id="tab-swap" aria-labelledby="t-swap" hidden>
+      <p class="tab-intro">Slot mixing between two unrelated COCO images (the protocol of the table above). The selected slots (red in the top image, blue in the bottom image) are exchanged, and both scenes are regenerated.</p>
+      <div class="grid-2">
+        <div class="strip"><img src="static/images/swap/swap_01.webp" alt="Slot swap example between two COCO images" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>After swap</span></div></div>
+        <div class="strip"><img src="static/images/swap/swap_02.webp" alt="Slot swap example between two COCO images" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>After swap</span></div></div>
+        <div class="strip"><img src="static/images/swap/swap_03.webp" alt="Slot swap example between two COCO images" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>After swap</span></div></div>
+        <div class="strip"><img src="static/images/swap/swap_04.webp" alt="Slot swap example between two COCO images" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>After swap</span></div></div>
+        <div class="strip"><img src="static/images/swap/swap_05.webp" alt="Slot swap example between two COCO images" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>After swap</span></div></div>
+        <div class="strip"><img src="static/images/swap/swap_06.webp" alt="Slot swap example between two COCO images" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>After swap</span></div></div>
+        <div class="strip"><img src="static/images/swap/swap_07.webp" alt="Slot swap example between two COCO images" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>After swap</span></div></div>
+        <div class="strip"><img src="static/images/swap/swap_08.webp" alt="Slot swap example between two COCO images" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>After swap</span></div></div>
+      </div>
+    </div>
+
+    <div class="tabpanel" role="tabpanel" id="tab-fail" aria-labelledby="t-fail" hidden>
+      <p class="tab-intro">Subtraction in very complex scenes can fail. Highly correlated objects share a slot (floating hands, top). Removing a heavily occluding subject can collapse the underlying geometry (the bench, middle). Dense scenes can leave floating artifacts (street signs, bottom).</p>
+      <div class="strip"><img src="static/images/failure/fail_1.webp" alt="Failure case" loading="lazy"></div>
+      <div class="strip"><img src="static/images/failure/fail_2.webp" alt="Failure case" loading="lazy"></div>
+      <div class="strip"><img src="static/images/failure/fail_3.webp" alt="Failure case" loading="lazy"></div>
+    </div>
+  </section>
+
+  <!-- ================= EFFICIENCY ================= -->
+  <section class="wrap" id="efficiency">
+    <div class="narrow" style="margin:0 auto">
+      <h2>Training and inference efficiency</h2>
+      <p>Slot-RAE drops the VAE, the pre-trained U-Net and classifier-free guidance. Its compact DiT runs the whole diffusion loop in the compressed semantic feature space. All models are measured with 20 denoising steps on a consumer laptop GPU (NVIDIA RTX A2000, 8 GB).</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th rowspan="2">Model</th><th colspan="2">Training</th><th colspan="2">Inference (1 image)</th></tr>
+            <tr><th>Params (M)↓</th><th>Train time↓</th><th>Memory (GB)↓</th><th>Latency (s)↓</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Stable-LSD</td><td>1250<sup>†</sup></td><td>4.0 days</td><td>4.8</td><td>10.3</td></tr>
+            <tr><td>GLASS</td><td>1385<sup>†</sup></td><td>6.0 days</td><td>5.6</td><td>10.1</td></tr>
+            <tr><td>CODA</td><td>1038<sup>†</sup></td><td>10.0 days</td><td>4.2</td><td>9.4</td></tr>
+            <tr class="ours"><td>Slot-RAE (ours)</td><td><b>842</b><sup>‡</sup></td><td><b>2.0 days</b></td><td><b>2.9</b></td><td><b>1.35</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note"><sup>†</sup> Includes frozen backbone / VAE and Stable Diffusion weights. <sup>‡</sup> Includes the RAE decoder in addition to the slot and feature-extraction modules.</p>
+    </div>
+  </section>
+
+  <!-- ================= ABLATIONS ================= -->
+  <section class="wrap" id="ablations">
+    <div class="narrow" style="margin:0 auto">
+      <h2>Ablations</h2>
+      <p>Stronger foundation features help directly: DINOv3 improves both decomposition and synthesis. REPA is what harmonizes the generative DiT with the VFM features. Larger decoders bring diminishing returns, because an over-expressive decoder starts to bypass the slot bottleneck. Naively summing multi-layer features (the RAEv2 approach) severely hurts both decomposition and reconstruction.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Variant</th><th>mBO<sub>i</sub>↑</th><th>mBO<sub>c</sub>↑</th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th><th>FID↓</th></tr></thead>
+        <tbody>
+          <tr class="ours"><td>Full model: Slot-RAE-B, DINOv3-B, REPA, 768-d slots</td><td>32.3</td><td>38.1</td><td><b>13.93</b></td><td><b>0.33</b></td><td><b>0.46</b></td><td><b>10.11</b></td></tr>
+          <tr class="group"><td colspan="7">(a) Decoder scale</td></tr>
+          <tr><td>Slot-RAE-S (60M)</td><td>32.3</td><td><b>38.7</b></td><td>13.27</td><td>0.31</td><td>0.50</td><td>11.92</td></tr>
+          <tr><td>Slot-RAE-L (470M)</td><td>32.5</td><td>38.3</td><td>13.50</td><td>0.32</td><td>0.48</td><td>10.44</td></tr>
+          <tr><td>Slot-RAE-XL (839M)</td><td>32.4</td><td>38.1</td><td>13.31</td><td>0.32</td><td>0.49</td><td>10.61</td></tr>
+          <tr class="group"><td colspan="7">(b) VFM encoder</td></tr>
+          <tr><td>DINOv2-S</td><td>29.4</td><td>34.3</td><td>12.83</td><td>0.29</td><td>0.51</td><td>10.45</td></tr>
+          <tr><td>DINOv2-B</td><td>29.1</td><td>34.4</td><td>12.94</td><td>0.30</td><td>0.52</td><td>11.85</td></tr>
+          <tr><td>DINOv3-S</td><td>31.4</td><td>37.3</td><td>13.40</td><td>0.31</td><td>0.49</td><td>10.31</td></tr>
+          <tr class="group"><td colspan="7">(c) REPA head</td></tr>
+          <tr><td>Without REPA</td><td>31.7</td><td>37.9</td><td>13.53</td><td>0.32</td><td>0.49</td><td>10.54</td></tr>
+          <tr class="group"><td colspan="7">(d) Slot dimension</td></tr>
+          <tr><td>256</td><td><b>32.8</b></td><td>38.4</td><td>13.64</td><td>0.32</td><td>0.48</td><td>10.52</td></tr>
+          <tr><td>384</td><td>32.7</td><td>38.3</td><td>13.77</td><td>0.32</td><td>0.47</td><td>10.25</td></tr>
+          <tr><td>512</td><td>32.4</td><td>38.1</td><td>13.57</td><td>0.32</td><td>0.49</td><td>10.71</td></tr>
+          <tr class="group"><td colspan="7">(e) Multi-layer integration</td></tr>
+          <tr><td>Naïve MSL (addition, as in RAEv2)</td><td>29.3</td><td>33.8</td><td>10.96</td><td>0.27</td><td>0.64</td><td>46.39</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="narrow" style="margin:0 auto">
+      <p class="table-note">COCO. Smaller slots (256-d) factorize objects slightly better, while 768-d slots give the best synthesis.</p>
+    </div>
+  </section>
+
+  <!-- ================= LIMITATIONS ================= -->
+  <section class="wrap narrow" id="limitations">
+    <h2>Limitations</h2>
+    <p>Slot-RAE inherits the blind spots of its frozen backbone. Fine textures, extreme lighting or very small objects that the encoder misses remain out of reach for the diffusion decoder. Pixel-space viewing relies on a frozen RAE decoder, which may introduce its own artifacts. Finally, a gap remains with methods that use weak supervision from text-to-image priors. Text-aligned representation autoencoders are a promising way to close it without giving up the efficiency of the feature-space formulation.</p>
+  </section>
+
+  <!-- ================= BIBTEX ================= -->
+  <section class="wrap narrow" id="bibtex">
+    <h2>BibTeX</h2>
+    <div class="bib">
+      <button class="copy" id="copy-bib">Copy</button>
+<pre id="bib-text">@article{slotrae2026,
+  title   = {Slot-RAE: Streamlining Object-Centric Learning
+             via Direct Representation Auto-Encoders},
+  author  = {Anonymous},
+  journal = {Under review},
+  year    = {2026}
+}</pre>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    Slot-RAE builds on <a href="https://github.com/nanovisionx/RAEv2">RAEv2</a>, <a href="https://github.com/facebookresearch/dinov3">DINOv3</a> and <a href="https://arxiv.org/abs/2209.14860">DINOSAUR</a>.
+  </div>
+</footer>
+
+<script src="static/js/main.js"></script>
+</body>
+</html>
