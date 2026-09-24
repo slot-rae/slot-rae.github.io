@@ -293,10 +293,33 @@
     </div>
 
     <div class="tabpanel" role="tabpanel" id="tab-fail" aria-labelledby="t-fail" hidden>
-      <p class="tab-intro">Subtraction in very complex scenes can fail. Highly correlated objects share a slot (floating hands, top). Removing a heavily occluding subject can collapse the underlying geometry (the bench, middle). Dense scenes can leave floating artifacts (street signs, bottom).</p>
-      <div class="strip"><img src="static/images/failure/fail_1.webp" alt="Failure case" loading="lazy"></div>
-      <div class="strip"><img src="static/images/failure/fail_2.webp" alt="Failure case" loading="lazy"></div>
-      <div class="strip"><img src="static/images/failure/fail_3.webp" alt="Failure case" loading="lazy"></div>
+      <p class="tab-intro">Operating purely in a compressed feature space, without classifier-free guidance, zero-shot edits can fail in complex scenes. The failures come mostly from entangled slots and ambiguous background priors.</p>
+
+      <h3 style="margin-top:8px">Subtract</h3>
+      <p class="tab-intro">Correlated objects can share a slot, leaving floating hands behind. Removing an occluder can collapse the geometry behind it, like the bench. Dense scenes can leave floating artifacts, like the street signs. Removed objects can also be <i>regenerated</i> from the remaining slots and background: the player and the sheep reappear, and the cake is replaced by another one.</p>
+      <div class="grid-2">
+        <div class="strip"><img src="static/images/failure/fail_1.webp" alt="Failure case: correlated objects left behind" loading="lazy"></div>
+        <div class="strip"><img src="static/images/failure/fail_2.webp" alt="Failure case: collapsed geometry" loading="lazy"></div>
+        <div class="strip"><img src="static/images/failure/fail_3.webp" alt="Failure case: floating artifacts" loading="lazy"></div>
+        <div class="strip"><img src="static/images/failure/remove_fail_1.webp" alt="Failure case: removed object regenerated" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>Slot removed</span></div></div>
+        <div class="strip"><img src="static/images/failure/remove_fail_2.webp" alt="Failure case: removed object regenerated" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>Slot removed</span></div></div>
+        <div class="strip"><img src="static/images/failure/remove_fail_3.webp" alt="Failure case: removed object regenerated" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>Slot removed</span></div></div>
+      </div>
+
+      <h3>Add</h3>
+      <p class="tab-intro">Objects whose slot also encodes their surroundings are only weakly transferred: the bed turns into a vague shape, and the giraffe is barely visible in the new scene.</p>
+      <div class="grid-2">
+        <div class="strip"><img src="static/images/failure/add_fail_1.webp" alt="Failure case: weak object insertion" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Image A</span><span>Image B</span><span>Slot from A</span><span>Result</span></div></div>
+        <div class="strip"><img src="static/images/failure/add_fail_2.webp" alt="Failure case: weak object insertion" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Image A</span><span>Image B</span><span>Slot from A</span><span>Result</span></div></div>
+      </div>
+
+      <h3>Swap</h3>
+      <p class="tab-intro">When the selected slots mostly cover background, swapping them only exchanges scene context: the burger is never transferred. Large textured slots can leak their appearance instead of their shape: zebra stripes appear on a wall, and a bun texture covers a bed.</p>
+      <div class="grid-2">
+        <div class="strip"><img src="static/images/failure/swap_fail_1.webp" alt="Failure case: slot swap" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>After swap</span></div></div>
+        <div class="strip"><img src="static/images/failure/swap_fail_2.webp" alt="Failure case: slot swap" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>After swap</span></div></div>
+        <div class="strip"><img src="static/images/failure/swap_fail_3.webp" alt="Failure case: slot swap" loading="lazy"><div class="panel-labels" style="grid-template-columns:repeat(4,1fr)"><span>Input</span><span>Reconstruction</span><span>Selected slot</span><span>After swap</span></div></div>
+      </div>
     </div>
   </section>
 
